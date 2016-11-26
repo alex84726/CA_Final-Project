@@ -36,7 +36,8 @@ initial begin
     
     // Load instructions into instruction memory
     $readmemb("instruction.txt", CPU.Instruction_Memory.memory);
-    
+    $dumpfile("wave.vcd");
+    $dumpvars;
     // Open output file
     outfile = $fopen("output.txt") | 1;
     
