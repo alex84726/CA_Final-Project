@@ -35,6 +35,7 @@ Adder Add_PC(
 PC PC(
     .clk_i      (clk_i),
     .rst_i      (rst_i),
+    .flushPC_i  (),
     .start_i    (start_i),
     .pc_i       (next_pc),
     .pc_o       (inst_addr)
