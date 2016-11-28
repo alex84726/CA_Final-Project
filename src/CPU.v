@@ -91,5 +91,26 @@ ALU_Control ALU_Control(
     .ALUCtrl_o  (ALUCtrl)
 );
 
+Forwarding_unit Forwarding_unit(
+    .clk_i      (),
+    .MEM_Rd_i   (),
+    .WB_Rd_i    (),
+    .MEM_W_i    (), 
+    .WB_W_i     (),
+    .RS_i       (), 
+    .RT_i       (),
+    .RS_Src_o   ()
+);
+
+HazDetect_unit HazDetect_unit(
+    .clk_i      (),
+    .MemRead_i  (),
+    .Prev_RT_i  (),
+    .RSRT_i     (),
+    .PCWrite_o  (),
+    .IFIDWrite_o  (),
+    .IDEXWrite_o  ()
+);
+
 endmodule
 
