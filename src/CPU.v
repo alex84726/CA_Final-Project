@@ -18,6 +18,7 @@ wire  [31:0]  Sign_extend_o, ALU_i2;
 wire  RegDst,ALUSrc,RegWrite,Zero;
 wire  [1:0]   ALUOp;
 wire  [2:0]   ALUCtrl;
+//logic [3:0]    i;
 Control Control(
     .Op_i       (inst[31:26]),
     .RegDst_o   (RegDst),
@@ -89,6 +90,13 @@ ALU_Control ALU_Control(
     .ALUOp_i    (ALUOp),
     .ALUCtrl_o  (ALUCtrl)
 );
+regr MEM_WB(
+  
+
+
+
+
+)
 
 endmodule
 
