@@ -91,6 +91,7 @@ ALU_Control ALU_Control(
     .ALUOp_i    (ALUOp),
     .ALUCtrl_o  (ALUCtrl)
 );
+
 regr MEM_WB(
 ); 
 
@@ -101,6 +102,7 @@ MUX32_3in MUX32_3in(
     .select_i   (),
     .data_o     ()
 );
+
 dm dm(
 		.clk        (),
 		.addr       (),
@@ -109,6 +111,7 @@ dm dm(
 		.wdata      (),
 		.rdata      ()
 );
+
 Shift32 Shift_32(
   data_i        (),
   data_o        ()
