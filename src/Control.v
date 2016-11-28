@@ -1,14 +1,7 @@
 module Control (
     Op_i,
-    // RegDst_o,
-    // ALUSrc_o,
-    // MemtoReg_o,
-    // RegWrite_o,
-    // MemWrite_o,
     Branch_o,
     Jump_o,
-    // ExtOp_o,
-    // ALUOp_o,
     Bus_o
 );
 
@@ -19,6 +12,7 @@ output  wire  [7:0] Bus_o;
         reg         MemtoReg_o;
         reg         RegWrite_o;
         reg         MemWrite_o;
+        reg         MemRead_o;
 output  reg         Branch_o;
 output  reg         Jump_o;
         reg         ExtOp_o;
@@ -33,6 +27,7 @@ always@(*) begin
     MemtoReg_o = 0;
     RegWrite_o = 1;
     MemWrite_o = 0;
+    MemRead_o = 0;
     Branch_o = 0;
     Jump_o = 0;
     ExtOp_o = X;
@@ -45,6 +40,7 @@ always@(*) begin
     RegWrite_o = 1;
     MemWrite_o = 0;
     Branch_o = 0;
+    MemRead_o = 0;
     Jump_o = 0;
     ExtOp_o = 0;
     ALUOp_o = 2'b10; 
@@ -55,6 +51,7 @@ always@(*) begin
     MemtoReg_o = 1;
     RegWrite_o = 1;
     MemWrite_o = 0;
+    MemRead_o = 1;
     Branch_o = 0;
     Jump_o = 0;
     ExtOp_o = 1;
@@ -66,6 +63,7 @@ always@(*) begin
     MemtoReg_o = X;
     RegWrite_o = 0;
     MemWrite_o = 1;
+    MemRead_o = 0;
     Branch_o = 0;
     Jump_o = 0;
     ExtOp_o = 1;
@@ -77,6 +75,7 @@ always@(*) begin
     MemtoReg_o = X;
     RegWrite_o = 0;
     MemWrite_o = 0;
+    MemRead_o = 0;
     Branch_o = 1;
     Jump_o = 0;
     ExtOp_o = X;
@@ -88,6 +87,7 @@ always@(*) begin
     MemtoReg_o = X;
     RegWrite_o = 0;
     MemWrite_o = 0;
+    MemRead_o = 0;
     Branch_o = 0;
     Jump_o = 1;
     ExtOp_o = X;
@@ -95,7 +95,6 @@ always@(*) begin
   end
 end
 
-assign Bus_o[7:0] = {RegDst_o, ALUSrc_o, MemtoReg_o, RegWrite_o, MemWrite_o, ExtOp_o, ALUOp_o[1:0]};
-
+assign Bus_o[7:0] = {ALUSrc_o, ALUOp_o[1:0], RegDst_o, MemRead_o, MemWrite_o, MemtoReg_o, RegWrite_o} 
 endmodule
 

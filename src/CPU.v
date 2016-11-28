@@ -113,13 +113,15 @@ HazDetect_unit HazDetect_unit(
     .IDEXWrite_o  (IDEX_flush)
 );
 wire          Reg_Write
+
 Control Control(
     .Op_i       (opcode),
-    .RegDst_o   (RegDst),
-    .ALUOp_o    (ALUOp),
-    .ALUSrc_o   (ALUSrc),
-    .RegWrite_o (Reg_Write)
+    .Branch_o   (ctrl_branch),
+    .Jump_o     (jump),
+    .Bus_o      (control_id)
 );
+wire  []
+
 wire  [31:0]  Write_Data
 wire  [31:0]  read_data1_id
 wire  [31:0]  read_data2_id
@@ -134,7 +136,7 @@ Registers Registers(
     .RSdata_o   (read_data1_id), 
     .RTdata_o   (read_data2_id) 
 );
-
+assign equal
 // ******************Stage 3 components *****************
 MUX32_3in MUX32_3in_rs(
     .reg_i      (),
