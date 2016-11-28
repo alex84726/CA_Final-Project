@@ -72,6 +72,20 @@ MUX32 MUX_ALUSrc(
     .data_o     (ALU_i2)
 );
 
+MUX32 MUX_JumpPC(
+    .data1_i    (),
+    .data2_i    (),
+    .select_i   (),
+    .data_o     ()
+);
+
+MUX32 MUX_BranchPC(
+    .data1_i    (),
+    .data2_i    (),
+    .select_i   (),
+    .data_o     ()
+);
+
 Sign_Extend Sign_Extend(
     .data_i     (inst[15:0]),
     .data_o     (Sign_extend_o)
