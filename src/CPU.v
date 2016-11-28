@@ -55,15 +55,31 @@ Adder Add_PC(
     .data_o     (pc_4)
 );
 
-regr #(.N( )) IFID(
+wire [31:0] inst_ID
+wire [31:0] pc_4_ID
+regr #(.N(64)) IFID(
     .clk        (clk_i),
 	  .clear      (beq_flush),
 	  .hold       (lw_stall),
-    .in         (),
-	  .out        ()
+    .in         ({pc_4,inst}),
+	  .out        ({pc_4_ID,inst_ID})
 );
 
 // ******************Stage 2 components *****************
+  wire [5:0]  opcode;
+	wire [4:0]  rs;
+	wire [4:0]  rt;
+	wire [4:0]  rd;
+	wire [15:0] imm;
+	wire [4:0]  shamt;
+	wire [31:0] jaddr_s2;
+	wire [31:0] seimm;  // sign extended immediate
+	//
+	assign opcode   = inst_ID[31:26];
+	assign rs       = inst_ID[25:21];
+	assign rt       = inst_ID[20:16];
+	assign rd       = inst_ID[15:11];
+
 Sign_Extend Sign_Extend(
     .data_i     (inst[15:0]),
     .data_o     (Sign_extend_o)
