@@ -103,9 +103,18 @@ Shift32 Shift_32(
 );
 
 Adder Add_imm(
-  .data1_in       (),
-  .data2_in       (),
-  .data2_o        ()
+  .data1_in       (sign_ext_id_sh2),
+  .data2_in       (pc_4_ID),
+  .data2_o        (sh_addr)
+);
+wire  [3:0]   EX_id;
+wire  [1:0]   M_id;
+wire  [1:0]   WB_id;
+MUX8 MUX8(
+  .data1_in       (control_id),
+  .data2_in       (8'd0),
+  .select_i       (IDEX_flush),
+  .data_o         ({EX_id,M_id,WB_id})
 );
 
 wire IDEX_flush;
@@ -127,9 +136,7 @@ Control Control(
     .Jump_o     (jump),
     .Bus_o      (control_id)
 );
-wire  [3:0]   EX_id;
-wire  [1:0]   M_id;
-wire  [1:0]   WB_id;
+
 wire  [31:0]  Write_Data;
 wire  [31:0]  read_data1_id;
 wire  [31:0]  read_data2_id;
