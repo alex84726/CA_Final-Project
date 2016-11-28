@@ -31,10 +31,9 @@ Instruction_Memory Instruction_Memory(
 
 wire  [31:0]  sh_addr, branch_addr, sh_32;
 wire  [27:0]  sh_28_o;
-wire  ctrl_branch, equal, mux_branch, jump, beq_flush, lw_flush, flush_IFID;
+wire  ctrl_branch, equal, mux_branch, jump, beq_flush, lw_stall;
 assign mux_branch = equal&ctrl_branch;
 assign beq_flush = jump|mux_branch;
-assign flush_IFID = beq_flush|lw_flush;
 
 MUX32 MUX_BranchPC(
     .data1_i    (pc_4),
@@ -58,8 +57,8 @@ Adder Add_PC(
 
 regr #(.N( )) IFID(
     .clk        (clk_i),
-	  .clear      (flush_IFID),
-	  .hold       (),
+	  .clear      (beq_flush),
+	  .hold       (lw_stall),
     .in         (),
 	  .out        ()
 );
