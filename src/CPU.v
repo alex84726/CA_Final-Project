@@ -19,14 +19,24 @@ wire  RegDst,ALUSrc,RegWrite,Zero;
 wire  [1:0]   ALUOp;
 wire  [2:0]   ALUCtrl;
 //logic [3:0]    i;
-Control Control(
-    .Op_i       (inst[31:26]),
-    .RegDst_o   (RegDst),
-    .ALUOp_o    (ALUOp),
-    .ALUSrc_o   (ALUSrc),
-    .RegWrite_o (RegWrite)
+//
+//
+//
+// ****************** Stage 1 components ***************
+MUX32 MUX_BranchPC(
+    .data1_i    (),
+    .data2_i    (),
+    .select_i   (),
+    .data_o     ()
 );
 
+
+MUX32 MUX_JumpPC(
+    .data1_i    (),
+    .data2_i    (),
+    .select_i   (),
+    .data_o     ()
+);
 Adder Add_PC(
     .data1_in   (inst_addr),
     .data2_in   (32'd4),
@@ -47,6 +57,31 @@ Instruction_Memory Instruction_Memory(
     .instr_o    (inst)
 );
 
+// ******************Stage 2 components *****************
+Sign_Extend Sign_Extend(
+    .data_i     (inst[15:0]),
+    .data_o     (Sign_extend_o)
+);
+Shift32 Shift_32(
+  data_i        (),
+  data_o        ()
+);
+HazDetect_unit HazDetect_unit(
+    .clk_i      (),
+    .MemRead_i  (),
+    .Prev_RT_i  (),
+    .RSRT_i     (),
+    .PCWrite_o  (),
+    .IFIDWrite_o  (),
+    .IDEXWrite_o  ()
+);
+Control Control(
+    .Op_i       (inst[31:26]),
+    .RegDst_o   (RegDst),
+    .ALUOp_o    (ALUOp),
+    .ALUSrc_o   (ALUSrc),
+    .RegWrite_o (RegWrite)
+);
 Registers Registers(
     .clk_i      (clk_i),
     .RSaddr_i   (inst[25:21]),
@@ -58,6 +93,45 @@ Registers Registers(
     .RTdata_o   (Read_data2) 
 );
 
+// ******************Stage 3 components *****************
+MUX32_3in MUX32_3in_rs(
+    .reg_i      (),
+    .preALU_i   (),
+    .DMorALU_i  (),
+    .select_i   (),
+    .data_o     ()
+);
+MUX32_3in MUX32_3in_rt(
+    .reg_i      (),
+    .preALU_i   (),
+    .DMorALU_i  (),
+    .select_i   (),
+    .data_o     ()
+);
+ALU ALU(
+    .data1_i    (Read_data1),
+    .data2_i    (ALU_i2),
+    .ALUCtrl_i  (ALUCtrl),
+    .data_o     (Write_Data),
+    .Zero_o     (Zero)
+);
+Forwarding_unit Forwarding_unit(
+    .clk_i      (),
+    .MEM_Rd_i   (),
+    .WB_Rd_i    (),
+    .MEM_W_i    (), 
+    .WB_W_i     (),
+    .RS_i       (), 
+    .RT_i       (),
+    .RS_Src_o   ()
+);
+
+
+ALU_Control ALU_Control(
+    .funct_i    (inst[5:0]),
+    .ALUOp_i    (ALUOp),
+    .ALUCtrl_o  (ALUCtrl)
+);
 MUX5 MUX_RegDst(
     .data1_i    (inst[20:16]),
     .data2_i    (inst[15:11]),
@@ -72,51 +146,7 @@ MUX32 MUX_ALUSrc(
     .data_o     (ALU_i2)
 );
 
-MUX32 MUX_JumpPC(
-    .data1_i    (),
-    .data2_i    (),
-    .select_i   (),
-    .data_o     ()
-);
-
-MUX32 MUX_BranchPC(
-    .data1_i    (),
-    .data2_i    (),
-    .select_i   (),
-    .data_o     ()
-);
-
-Sign_Extend Sign_Extend(
-    .data_i     (inst[15:0]),
-    .data_o     (Sign_extend_o)
-);
-
-
-ALU ALU(
-    .data1_i    (Read_data1),
-    .data2_i    (ALU_i2),
-    .ALUCtrl_i  (ALUCtrl),
-    .data_o     (Write_Data),
-    .Zero_o     (Zero)
-);
-
-ALU_Control ALU_Control(
-    .funct_i    (inst[5:0]),
-    .ALUOp_i    (ALUOp),
-    .ALUCtrl_o  (ALUCtrl)
-);
-
-regr MEM_WB(
-); 
-
-MUX32_3in MUX32_3in(
-    .reg_i      (),
-    .preALU_i   (),
-    .DMorALU_i  (),
-    .select_i   (),
-    .data_o     ()
-);
-
+// ******************Stage 4 components *****************
 dm dm(
 		.clk        (),
 		.addr       (),
@@ -126,32 +156,20 @@ dm dm(
 		.rdata      ()
 );
 
-Shift32 Shift_32(
-  data_i        (),
-  data_o        ()
-);
 
 
-Forwarding_unit Forwarding_unit(
-    .clk_i      (),
-    .MEM_Rd_i   (),
-    .WB_Rd_i    (),
-    .MEM_W_i    (), 
-    .WB_W_i     (),
-    .RS_i       (), 
-    .RT_i       (),
-    .RS_Src_o   ()
-);
 
-HazDetect_unit HazDetect_unit(
-    .clk_i      (),
-    .MemRead_i  (),
-    .Prev_RT_i  (),
-    .RSRT_i     (),
-    .PCWrite_o  (),
-    .IFIDWrite_o  (),
-    .IDEXWrite_o  ()
-);
+
+
+regr MEM_WB(
+); 
+
+
+
+
+
+
+
 
 endmodule
 
