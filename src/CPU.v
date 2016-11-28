@@ -66,23 +66,26 @@ regr #(.N(64)) IFID(
 );
 
 // ******************Stage 2 components *****************
-  wire [5:0]  opcode;
-	wire [4:0]  rs;
-	wire [4:0]  rt;
-	wire [4:0]  rd;
-	wire [15:0] imm;
-	wire [4:0]  shamt;
-	wire [31:0] jaddr_s2;
-	wire [31:0] seimm;  // sign extended immediate
-	//
-	assign opcode   = inst_ID[31:26];
-	assign rs       = inst_ID[25:21];
-	assign rt       = inst_ID[20:16];
-	assign rd       = inst_ID[15:11];
+wire [5:0]  opcode;
+wire [4:0]  rs;
+wire [4:0]  rt;
+wire [4:0]  rd;
+wire [15:0] imm;
+wire [4:0]  shamt;
+//wire [31:0] jaddr;
+wire [31:0] sign_ext_id, sign_ext_id_2;  // sign extended immediate
+//
+assign opcode   = inst_ID[31:26];
+assign rsrt     = inst_ID[25:16];
+assign rs       = inst_ID[25:21];
+assign rt       = inst_ID[20:16];
+assign rd       = inst_ID[15:11];
+assign imm      = inst_ID[15:0];
+assign shamt    = inst_ID[10:6];
 
 Sign_Extend Sign_Extend(
-    .data_i     (inst[15:0]),
-    .data_o     (Sign_extend_o)
+    .data_i     (imm),
+    .data_o     (sign_ext_id)
 );
 
 shiftLeft_26_28 sh_26_28(
@@ -94,18 +97,19 @@ assign sh_32[27:0] = sh_28_o;
 assign sh_32[31:28] = branch_addr[31:28];
 
 Shift32 Shift_32(
-  data_i        (),
-  data_o        ()
+  data_i        (sign_ext_id),
+  data_o        (sign_ext_id_sh2)
 );
 
+wire IDEX_flush;
 HazDetect_unit HazDetect_unit(
-    .clk_i      (),
+    .clk_i      (clk_i),
     .MemRead_i  (),
     .Prev_RT_i  (),
-    .RSRT_i     (),
-    .PCWrite_o  (),
-    .IFIDWrite_o  (),
-    .IDEXWrite_o  ()
+    .RSRT_i     (rsrt),
+    .PCWrite_o  (pc_flush),
+    .IFIDWrite_o  (lw_stall),
+    .IDEXWrite_o  (IDEX_flush)
 );
 
 Control Control(
