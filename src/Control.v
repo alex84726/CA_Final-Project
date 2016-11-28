@@ -1,44 +1,65 @@
-module Control(
-  Op_i,
-  RegDst_o,
-  ALUOp_o,
-  ALUSrc_o,
-  RegWrite_o
-);
+`ifndef _control
+`define _control
 
-input  [5:0] Op_i;
-output   RegDst_o;
-output   [1:0] ALUOp_o;
-output   ALUSrc_o, RegWrite_o;
+module control(
+		input  wire	[5:0]	opcode,
+		output reg			branch_eq, branch_ne,
+		output reg [1:0]	aluop,
+		output reg			memread, memwrite, memtoreg,
+		output reg			regdst, regwrite, alusrc,
+		output reg			jump);
 
-reg rd,alus,rw;
-reg [1:0] aluo;
+	always @(*) begin
+		/* defaults */
+		aluop[1:0]	<= 2'b10;
+		alusrc		<= 1'b0;
+		branch_eq	<= 1'b0;
+		branch_ne	<= 1'b0;
+		memread		<= 1'b0;
+		memtoreg	<= 1'b0;
+		memwrite	<= 1'b0;
+		regdst		<= 1'b1;
+		regwrite	<= 1'b1;
+		jump		<= 1'b0;
 
-always @(*) begin 
-  case(Op_i)
-    6'b000000: begin
-      rd <= 1'b1;
-      aluo <= 2'b11;
-      alus <= 1'b0;
-      rw <= 1'b1;
-    end
-    6'b001000: begin
-      rd <= 1'b0;
-      aluo <= 2'b00;
-      alus <= 1'b1;
-      rw <= 1'b1;
-    end
-    default: begin
-      rd <= 1'b1;
-      aluo <= 2'b01;
-      alus <= 1'b0;
-      rw <= 1'b0;
-    end
-  endcase
-end
-
-assign  RegDst_o = rd;
-assign  ALUOp_o = aluo;
-assign  ALUSrc_o = alus;
-assign  RegWrite_o = rw;
+		case (opcode)
+			6'b100011: begin	/* lw */
+				memread  <= 1'b1;
+				regdst   <= 1'b0;
+				memtoreg <= 1'b1;
+				aluop[1] <= 1'b0;
+				alusrc   <= 1'b1;
+			end
+			6'b001000: begin	/* addi */
+				regdst   <= 1'b0;
+				aluop[1] <= 1'b0;
+				alusrc   <= 1'b1;
+			end
+			6'b000100: begin	/* beq */
+				aluop[0]  <= 1'b1;
+				aluop[1]  <= 1'b0;
+				branch_eq <= 1'b1;
+				regwrite  <= 1'b0;
+			end
+			6'b101011: begin	/* sw */
+				memwrite <= 1'b1;
+				aluop[1] <= 1'b0;
+				alusrc   <= 1'b1;
+				regwrite <= 1'b0;
+			end
+			6'b000101: begin	/* bne */
+				aluop[0]  <= 1'b1;
+				aluop[1]  <= 1'b0;
+				branch_ne <= 1'b1;
+				regwrite  <= 1'b0;
+			end
+			6'b000000: begin	/* add */
+			end
+			6'b000010: begin	/* j jump */
+				jump <= 1'b1;
+			end
+		endcase
+	end
 endmodule
+
+`endif

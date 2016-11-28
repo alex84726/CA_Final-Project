@@ -92,12 +92,28 @@ ALU_Control ALU_Control(
     .ALUCtrl_o  (ALUCtrl)
 );
 regr MEM_WB(
-  
+); 
 
+MUX32_3in MUX32_3in(
+    .reg_i      (),
+    .preALU_i   (),
+    .DMorALU_i  (),
+    .select_i   (),
+    .data_o     ()
+);
+dm dm(
+		.clk        (),
+		.addr       (),
+		.rd         (),
+    .wr         (),
+		.wdata      (),
+		.rdata      ()
+);
+Shift32 Shift_32(
+  data_i        (),
+  data_o        ()
+);
 
-
-
-)
 
 endmodule
 
