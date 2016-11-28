@@ -18,7 +18,7 @@ output  reg         Jump_o;
         reg         ExtOp_o;
         reg   [1:0] ALUOp_o;
 
-parameter X = 1;
+parameter X = 0;
 
 always@(*) begin
   if(Op_i==6'b000000) begin   // R-type

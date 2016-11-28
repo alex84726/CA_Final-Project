@@ -73,7 +73,7 @@ wire [4:0]  rd;
 wire [15:0] imm;
 wire [4:0]  shamt;
 //wire [31:0] jaddr;
-wire [31:0] sign_ext_id, sign_ext_id_2;  // sign extended immediate
+wire [31:0] sign_ext_id, sign_ext_id_sh2;  // sign extended immediate
 //
 assign opcode   = inst_ID[31:26];
 assign rsrt     = inst_ID[25:16];
@@ -98,8 +98,14 @@ assign sh_32[27:0] = sh_28_o;
 assign sh_32[31:28] = branch_addr[31:28];
 
 Shift32 Shift_32(
-  data_i        (sign_ext_id),
-  data_o        (sign_ext_id_sh2)
+  .data_i        (sign_ext_id),
+  .data_o        (sign_ext_id_sh2)
+);
+
+Adder Add_imm(
+  .data1_in       (),
+  .data2_in       (),
+  .data2_o        ()
 );
 
 wire IDEX_flush;
@@ -112,19 +118,25 @@ HazDetect_unit HazDetect_unit(
     .IFIDWrite_o  (lw_stall),
     .IDEXWrite_o  (IDEX_flush)
 );
-wire          Reg_Write
-
+wire          Reg_Write;
+wire          ctrl_branch,jump;
+wire  [7:0]   control_id;
 Control Control(
     .Op_i       (opcode),
     .Branch_o   (ctrl_branch),
     .Jump_o     (jump),
     .Bus_o      (control_id)
 );
-wire  []
+wire  [3:0]   EX_id;
+wire  [1:0]   M_id;
+wire  [1:0]   WB_id;
+wire  [31:0]  Write_Data;
+wire  [31:0]  read_data1_id;
+wire  [31:0]  read_data2_id;
 
-wire  [31:0]  Write_Data
-wire  [31:0]  read_data1_id
-wire  [31:0]  read_data2_id
+assign EX_id = control_id[7:4];
+assign M_id = control_id[3:2];
+assign WB_id = control_id[1:0];
 
 Registers Registers(
     .clk_i      (clk_i),
@@ -136,7 +148,7 @@ Registers Registers(
     .RSdata_o   (read_data1_id), 
     .RTdata_o   (read_data2_id) 
 );
-assign equal
+assign equal = (read_data1_id == read_data2_id)? 1 : 0;
 // ******************Stage 3 components *****************
 MUX32_3in MUX32_3in_rs(
     .reg_i      (),
