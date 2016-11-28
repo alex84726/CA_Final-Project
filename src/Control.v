@@ -1,65 +1,101 @@
-`ifndef _control
-`define _control
+module Control (
+    Op_i,
+    // RegDst_o,
+    // ALUSrc_o,
+    // MemtoReg_o,
+    // RegWrite_o,
+    // MemWrite_o,
+    Branch_o,
+    Jump_o,
+    // ExtOp_o,
+    // ALUOp_o,
+    Bus_o
+);
 
-module control(
-		input  wire	[5:0]	opcode,
-		output reg			branch_eq, branch_ne,
-		output reg [1:0]	aluop,
-		output reg			memread, memwrite, memtoreg,
-		output reg			regdst, regwrite, alusrc,
-		output reg			jump);
+input	  wire  [5:0] Op_i;
+output  wire  [7:0] Bus_o;
+        reg         RegDst_o; 
+        reg         ALUSrc_o;
+        reg         MemtoReg_o;
+        reg         RegWrite_o;
+        reg         MemWrite_o;
+output  reg         Branch_o;
+output  reg         Jump_o;
+        reg         ExtOp_o;
+        reg   [1:0] ALUOp_o;
 
-	always @(*) begin
-		/* defaults */
-		aluop[1:0]	<= 2'b10;
-		alusrc		<= 1'b0;
-		branch_eq	<= 1'b0;
-		branch_ne	<= 1'b0;
-		memread		<= 1'b0;
-		memtoreg	<= 1'b0;
-		memwrite	<= 1'b0;
-		regdst		<= 1'b1;
-		regwrite	<= 1'b1;
-		jump		<= 1'b0;
+parameter X = 1;
 
-		case (opcode)
-			6'b100011: begin	/* lw */
-				memread  <= 1'b1;
-				regdst   <= 1'b0;
-				memtoreg <= 1'b1;
-				aluop[1] <= 1'b0;
-				alusrc   <= 1'b1;
-			end
-			6'b001000: begin	/* addi */
-				regdst   <= 1'b0;
-				aluop[1] <= 1'b0;
-				alusrc   <= 1'b1;
-			end
-			6'b000100: begin	/* beq */
-				aluop[0]  <= 1'b1;
-				aluop[1]  <= 1'b0;
-				branch_eq <= 1'b1;
-				regwrite  <= 1'b0;
-			end
-			6'b101011: begin	/* sw */
-				memwrite <= 1'b1;
-				aluop[1] <= 1'b0;
-				alusrc   <= 1'b1;
-				regwrite <= 1'b0;
-			end
-			6'b000101: begin	/* bne */
-				aluop[0]  <= 1'b1;
-				aluop[1]  <= 1'b0;
-				branch_ne <= 1'b1;
-				regwrite  <= 1'b0;
-			end
-			6'b000000: begin	/* add */
-			end
-			6'b000010: begin	/* j jump */
-				jump <= 1'b1;
-			end
-		endcase
-	end
+always@(*) begin
+  if(Op_i==6'b000000) begin   // R-type
+    RegDst_o = 1;
+    ALUSrc_o = 0;
+    MemtoReg_o = 0;
+    RegWrite_o = 1;
+    MemWrite_o = 0;
+    Branch_o = 0;
+    Jump_o = 0;
+    ExtOp_o = X;
+    ALUOp_o = 2'b11; 
+  end
+  else if(Op_i==6'b001101) begin   // ori
+    RegDst_o = 0;
+    ALUSrc_o = 1;
+    MemtoReg_o = 0;
+    RegWrite_o = 1;
+    MemWrite_o = 0;
+    Branch_o = 0;
+    Jump_o = 0;
+    ExtOp_o = 0;
+    ALUOp_o = 2'b10; 
+  end
+  else if(Op_i==6'b100111) begin   // lw
+    RegDst_o = 0;
+    ALUSrc_o = 1;
+    MemtoReg_o = 1;
+    RegWrite_o = 1;
+    MemWrite_o = 0;
+    Branch_o = 0;
+    Jump_o = 0;
+    ExtOp_o = 1;
+    ALUOp_o = 2'b00; 
+  end
+  else if(Op_i==6'b101011) begin   // sw
+    RegDst_o = X;
+    ALUSrc_o = 1;
+    MemtoReg_o = X;
+    RegWrite_o = 0;
+    MemWrite_o = 1;
+    Branch_o = 0;
+    Jump_o = 0;
+    ExtOp_o = 1;
+    ALUOp_o = 2'b00; 
+  end
+  else if(Op_i==6'b000100) begin   // beq
+    RegDst_o = X;
+    ALUSrc_o = 0;
+    MemtoReg_o = X;
+    RegWrite_o = 0;
+    MemWrite_o = 0;
+    Branch_o = 1;
+    Jump_o = 0;
+    ExtOp_o = X;
+    ALUOp_o = 2'b01; 
+  end
+  else if(Op_i==6'b000010) begin   // jump
+    RegDst_o = X;
+    ALUSrc_o = X;
+    MemtoReg_o = X;
+    RegWrite_o = 0;
+    MemWrite_o = 0;
+    Branch_o = 0;
+    Jump_o = 1;
+    ExtOp_o = X;
+    ALUOp_o = 2'bXX; 
+  end
+end
+
+assign Bus_o[7:0] = {RegDst_o, ALUSrc_o, MemtoReg_o, RegWrite_o, MemWrite_o, ExtOp_o, ALUOp_o[1:0]};
+
 endmodule
 
-`endif
