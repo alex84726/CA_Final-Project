@@ -75,11 +75,12 @@ regr #(.N(64)) IFID(
 	wire [31:0] jaddr_s2;
 	wire [31:0] seimm;  // sign extended immediate
 	//
+	assign jaddr_s2 = {pc[31:28], inst_s2[25:0], {2{1'b0}}};
 	assign opcode   = inst_ID[31:26];
 	assign rs       = inst_ID[25:21];
 	assign rt       = inst_ID[20:16];
 	assign rd       = inst_ID[15:11];
-
+  
 Sign_Extend Sign_Extend(
     .data_i     (inst[15:0]),
     .data_o     (Sign_extend_o)
@@ -107,24 +108,27 @@ HazDetect_unit HazDetect_unit(
     .IFIDWrite_o  (),
     .IDEXWrite_o  ()
 );
-
+wire          Reg_Write
 Control Control(
-    .Op_i       (inst[31:26]),
+    .Op_i       (opcode),
     .RegDst_o   (RegDst),
     .ALUOp_o    (ALUOp),
     .ALUSrc_o   (ALUSrc),
-    .RegWrite_o (RegWrite)
+    .RegWrite_o (Reg_Write)
 );
+wire  [31:0]  Write_Data
+wire  [31:0]  read_data1_id
+wire  [31:0]  read_data2_id
 
 Registers Registers(
     .clk_i      (clk_i),
-    .RSaddr_i   (inst[25:21]),
-    .RTaddr_i   (inst[20:16]),
-    .RDaddr_i   (Write_Reg), 
+    .RSaddr_i   (rs),
+    .RTaddr_i   (rt),
+    .RDaddr_i   (rd), 
     .RDdata_i   (Write_Data),
-    .RegWrite_i (RegWrite), 
-    .RSdata_o   (Read_data1), 
-    .RTdata_o   (Read_data2) 
+    .RegWrite_i (Reg_Write), 
+    .RSdata_o   (read_data1_id), 
+    .RTdata_o   (read_data2_id) 
 );
 
 // ******************Stage 3 components *****************
