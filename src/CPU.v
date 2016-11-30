@@ -55,8 +55,8 @@ Adder Add_PC(
     .data_o     (pc_4)
 );
 
-wire [31:0] inst_ID
-wire [31:0] pc_4_ID
+wire [31:0] inst_ID;
+wire [31:0] pc_4_ID;
 regr #(.N(64)) IFID(
     .clk        (clk_i),
 	  .clear      (beq_flush),
@@ -107,29 +107,22 @@ Adder Add_imm(
   .data2_in       (pc_4_ID),
   .data2_o        (sh_addr)
 );
-wire  [3:0]   EX_id;
-wire  [1:0]   M_id;
-wire  [1:0]   WB_id;
-MUX8 MUX8(
-  .data1_in       (control_id),
-  .data2_in       (8'd0),
-  .select_i       (IDEX_flush),
-  .data_o         ({EX_id,M_id,WB_id})
-);
 
 wire IDEX_flush;
+wire [4:0]  rt_ex;
 HazDetect_unit HazDetect_unit(
     .clk_i      (clk_i),
-    .MemRead_i  (),
-    .Prev_RT_i  (),
+    .MemRead_i  (M_ex[1]),
+    .Prev_RT_i  (rt_ex),
     .RSRT_i     (rsrt),
     .PCWrite_o  (pc_flush),
     .IFIDWrite_o  (lw_stall),
     .IDEXWrite_o  (IDEX_flush)
 );
+
 wire          Reg_Write;
-wire          ctrl_branch,jump;
 wire  [7:0]   control_id;
+
 Control Control(
     .Op_i       (opcode),
     .Branch_o   (ctrl_branch),
@@ -137,101 +130,157 @@ Control Control(
     .Bus_o      (control_id)
 );
 
+wire  [3:0]   EX_id;
+wire  [1:0]   M_id;
+wire  [1:0]   WB_id;
+
+MUX8 MUX8(
+  .data1_in       (control_id),
+  .data2_in       (8'd0),
+  .select_i       (IDEX_flush),
+  .data_o         ({EX_id,M_id,WB_id})
+);
+
 wire  [31:0]  Write_Data;
 wire  [31:0]  read_data1_id;
 wire  [31:0]  read_data2_id;
-
+/*
 assign EX_id = control_id[7:4];
 assign M_id = control_id[3:2];
 assign WB_id = control_id[1:0];
-
+*/
+wire [4:0]  Write_Register;
 Registers Registers(
     .clk_i      (clk_i),
     .RSaddr_i   (rs),
     .RTaddr_i   (rt),
-    .RDaddr_i   (rd), 
+    .RDaddr_i   (Write_Register), 
     .RDdata_i   (Write_Data),
     .RegWrite_i (Reg_Write), 
     .RSdata_o   (read_data1_id), 
     .RTdata_o   (read_data2_id) 
 );
 assign equal = (read_data1_id == read_data2_id)? 1 : 0;
+
+wire [1:0]  WB_ex, M_ex, ALUOp;
+wire ALUSrc, RegDst;
+wire [31:0] read_data1_ex, read_data2_ex, Sign_extend_o;
+wire [4:0]  rs_ex,rd_ex;
+// Noted: clear and hold signal
+regr #(.N(119)) IDEX(
+    .clk        (clk_i),
+	  .clear      (lw_stall),
+	  .hold       (1'b0),
+    .in         ({WB_id,M_id,EX_id,read_data1_id,read_data2_id,sign_ext_id,rs,rt,rd}),
+	  .out        ({WB_ex,M_ex,ALUSrc,ALUOp,RegDst,read_data1_ex,read_data2_ex,Sign_extend_o,rs_ex,rt_ex,rd_ex})
+);
+
+
 // ******************Stage 3 components *****************
-wire read_data1_ex;
-wire ALU_mem;
-wire Write_Data;
-wire RS_Src_Ctr;
-wire Read_data1;
+wire [31:0] ALU_mem, muxRS_data_o, muxRT_data_o, ALU_i2;
+wire [1:0]  RS_Src_Ctr, RT_Src_Ctr;
+
 MUX32_3in MUX32_3in_rs(
     .reg_i      (read_data1_ex),
     .preALU_i   (ALU_mem),
     .DMorALU_i  (Write_Data),
     .select_i   (RS_Src_Ctr),
-    .data_o     (Read_data1)
+    .data_o     (muxRS_data_o)
 );
 
-wire read_data2_ex;
-wire RT_Src_Ctr;
-wire ALU_i2;
 MUX32_3in MUX32_3in_rt(
     .reg_i      (read_data2_ex),
     .preALU_i   (ALU_mem),
     .DMorALU_i  (Write_Data),
     .select_i   (RT_Src_Ctr),
+    .data_o     (muxRT_data_o)
+);
+
+MUX32 MUX_ALUSrc(
+    .data1_i    (muxRT_data_o),
+    .data2_i    (Sign_extend_o),
+    .select_i   (ALUSrc),
     .data_o     (ALU_i2)
 );
-wire ALUCtrl;
+
+wire [2:0]  ALUCtrl;
+ALU_Control ALU_Control(
+    .funct_i    (Sign_extend_o[5:0]),
+    .ALUOp_i    (ALUOp),
+    .ALUCtrl_o  (ALUCtrl)
+);
+
+//redundant signal Zero
 wire Zero;
+wire [31:0] ALU_ex;
 ALU ALU(
-    .data1_i    (Read_data1),
+    .data1_i    (muxRS_data_o),
     .data2_i    (ALU_i2),
     .ALUCtrl_i  (ALUCtrl),
     .data_o     (ALU_ex),
     .Zero_o     (Zero)
 );
 
+wire [4:0] Write_Register_ex;
+MUX5 MUX_RegDst(
+    .data1_i    (rt_ex),
+    .data2_i    (rd_ex),
+    .select_i   (RegDst),
+    .data_o     (Write_Register_ex)
+);
+
+wire [1:0] WB_mem;
+wire MemRead, MemWrite;
+wire [31:0] dm_Write_Data;
+wire [4:0] Write_Register_mem;
+regr #(.N(73)) EXMEM(
+    .clk        (clk_i),
+	  .clear      (1'b0),
+	  .hold       (1'b0),
+    .in         ({WB_ex,M_ex,ALU_ex,muxRT_data_o,Write_Register_ex}),
+	  .out        ({WB_mem,MemRead,MemWrite,ALU_mem,dm_Write_Data,Write_Register_mem})
+);
+
+// ******************Stage 4 components *****************
+wire [31:0] dm_o;
+dm dm(
+		.clk        (clk_i),
+		.addr       (ALU_mem),
+		.rd         (MemRead),
+    .wr         (MemWrite),
+		.wdata      (dm_Write_Data),
+		.rdata      (dm_o)
+);
+
+wire MemtoReg;
+wire [31:0] dm_data, ALU_data;
+regr #(.N(71)) EXMEM(
+    .clk        (clk_i),
+	  .clear      (1'b0),
+	  .hold       (1'b0),
+    .in         ({WB_mem,dm_o,ALU_mem,Write_Register_mem}),
+	  .out        ({MemtoReg,Reg_Write,dm_data,ALU_data,Write_Register})
+);
+
+// ******************Stage 5 WriteBack *****************
+
+MUX32 MUX_MemtoReg(
+    .data1_i    (ALU_data),
+    .data2_i    (dm_data),
+    .select_i   (MemtoReg),
+    .data_o     (Write_Data)
+);
+
 Forwarding_unit Forwarding_unit(
     .clk_i      (clk_i),
     .MEM_Rd_i   (Write_Register_mem),
     .WB_Rd_i    (Write_Register),
-    .MEM_W_i    (WB_mem), 
+    .MEM_W_i    (WB_mem[0]), 
     .WB_W_i     (Reg_Write),
-    .RS_i       (Rs_ex), 
-    .RT_i       (Rt_ex),
+    .RS_i       (rs_ex), 
+    .RT_i       (rt_ex),
     .RS_Src_o   (RS_Src_Ctr),
     .RT_Src_o   (RT_Src_Ctr)
 );
-
-ALU_Control ALU_Control(
-    .funct_i    (inst[5:0]),
-    .ALUOp_i    (ALUOp),
-    .ALUCtrl_o  (ALUCtrl)
-);
-
-MUX5 MUX_RegDst(
-    .data1_i    (inst[20:16]),
-    .data2_i    (inst[15:11]),
-    .select_i   (RegDst),
-    .data_o     (Write_Reg)
-);
-
-MUX32 MUX_ALUSrc(
-    .data1_i    (Read_data2),
-    .data2_i    (Sign_extend_o),
-    .select_i   (ALUSrc),
-    .data_o     (ALU_i2)
-);
-
-// ******************Stage 4 components *****************
-dm dm(
-		.clk        (),
-		.addr       (),
-		.rd         (),
-    .wr         (),
-		.wdata      (),
-		.rdata      ()
-);
-
-
 endmodule
 
