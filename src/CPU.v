@@ -157,39 +157,49 @@ Registers Registers(
 );
 assign equal = (read_data1_id == read_data2_id)? 1 : 0;
 // ******************Stage 3 components *****************
+wire read_data1_ex;
+wire ALU_mem;
+wire Write_Data;
+wire RS_Src_Ctr;
+wire Read_data1;
 MUX32_3in MUX32_3in_rs(
-    .reg_i      (),
-    .preALU_i   (),
-    .DMorALU_i  (),
-    .select_i   (),
-    .data_o     ()
+    .reg_i      (read_data1_ex),
+    .preALU_i   (ALU_mem),
+    .DMorALU_i  (Write_Data),
+    .select_i   (RS_Src_Ctr),
+    .data_o     (Read_data1)
 );
 
+wire read_data2_ex;
+wire RT_Src_Ctr;
+wire ALU_i2;
 MUX32_3in MUX32_3in_rt(
-    .reg_i      (),
-    .preALU_i   (),
-    .DMorALU_i  (),
-    .select_i   (),
-    .data_o     ()
+    .reg_i      (read_data2_ex),
+    .preALU_i   (ALU_mem),
+    .DMorALU_i  (Write_Data),
+    .select_i   (RT_Src_Ctr),
+    .data_o     (ALU_i2)
 );
-
+wire ALUCtrl;
+wire Zero;
 ALU ALU(
     .data1_i    (Read_data1),
     .data2_i    (ALU_i2),
     .ALUCtrl_i  (ALUCtrl),
-    .data_o     (Write_Data),
+    .data_o     (ALU_ex),
     .Zero_o     (Zero)
 );
 
 Forwarding_unit Forwarding_unit(
-    .clk_i      (),
-    .MEM_Rd_i   (),
-    .WB_Rd_i    (),
-    .MEM_W_i    (), 
-    .WB_W_i     (),
-    .RS_i       (), 
-    .RT_i       (),
-    .RS_Src_o   ()
+    .clk_i      (clk_i),
+    .MEM_Rd_i   (Write_Register_mem),
+    .WB_Rd_i    (Write_Register),
+    .MEM_W_i    (WB_mem), 
+    .WB_W_i     (Reg_Write),
+    .RS_i       (Rs_ex), 
+    .RT_i       (Rt_ex),
+    .RS_Src_o   (RS_Src_Ctr),
+    .RT_Src_o   (RT_Src_Ctr)
 );
 
 ALU_Control ALU_Control(
