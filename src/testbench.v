@@ -61,6 +61,8 @@ always@(posedge Clk) begin
 
     // put in your own signal to count stall and flush
     // if(CPU.HazzardDetection.mux8_o == 1 && CPU.Control.Jump_o == 0 && CPU.Control.Branch_o == 0)stall = stall + 1;
+    if (CPU.beq_flush == 1) flush = flush + 1;
+    if (CPU.lw_stall ==1 ) stall = stall +1 ;
     // if(CPU.HazzardDetection.Flush_o == 1)flush = flush + 1;  
 
     // print PC
