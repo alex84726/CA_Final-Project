@@ -23,8 +23,9 @@ wire [4:0]  Cur_RT;
 assign Cur_RS = RSRT_i[9:5];
 assign Cur_RT = RSRT_i[4:0];
 
-always @(posedge clk_i) begin
-    // EX hazard
+//always @(posedge clk_i) begin
+always @(*) begin
+// EX hazard
     if((MemRead_i)&&((Prev_RT_i == Cur_RS)||(Prev_RT_i == Cur_RT))) begin
       //stall 1 cycle
       PCWrite_o = 1'b1;

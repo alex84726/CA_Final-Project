@@ -19,6 +19,10 @@ output  reg         Jump_o;
         reg   [1:0] ALUOp_o;
 
 parameter X = 0;
+initial begin
+  Branch_o = 0;
+  Jump_o = 0;
+end
 
 always@(*) begin
   if(Op_i==6'b000000) begin   // R-type
@@ -33,7 +37,7 @@ always@(*) begin
     ExtOp_o = X;
     ALUOp_o = 2'b11; 
   end
-  else if(Op_i==6'b001101) begin   // ori
+  else if(Op_i==6'b001000) begin   // andi
     RegDst_o = 0;
     ALUSrc_o = 1;
     MemtoReg_o = 0;
@@ -45,7 +49,19 @@ always@(*) begin
     ExtOp_o = 0;
     ALUOp_o = 2'b10; 
   end
-  else if(Op_i==6'b100111) begin   // lw
+  /*else if(Op_i==6'b001101) begin   // ori
+    RegDst_o = 0;
+    ALUSrc_o = 1;
+    MemtoReg_o = 0;
+    RegWrite_o = 1;
+    MemWrite_o = 0;
+    Branch_o = 0;
+    MemRead_o = 0;
+    Jump_o = 0;
+    ExtOp_o = 0;
+    ALUOp_o = 2'b10; 
+  end*/
+  else if(Op_i==6'b100011) begin   // lw
     RegDst_o = 0;
     ALUSrc_o = 1;
     MemtoReg_o = 1;
@@ -95,6 +111,6 @@ always@(*) begin
   end
 end
 
-assign Bus_o[7:0] = {ALUSrc_o, ALUOp_o[1:0], RegDst_o, MemRead_o, MemWrite_o, MemtoReg_o, RegWrite_o} 
+assign Bus_o[7:0] = {ALUSrc_o, ALUOp_o[1:0], RegDst_o, MemRead_o, MemWrite_o, MemtoReg_o, RegWrite_o}; 
 endmodule
 

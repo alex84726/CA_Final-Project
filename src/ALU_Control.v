@@ -15,8 +15,8 @@ always @(*) begin
   else if(ALUOp_i==2'b01) begin  // Sub for beq
     ALUCtrl_o = 3'b110;
   end
-  else if(ALUOp_i==2'b10) begin  // Ori
-    ALUCtrl_o = 3'b001;
+  else if(ALUOp_i==2'b10) begin  // Andi
+    ALUCtrl_o = 3'b010;
   end
   else if(ALUOp_i==2'b11) begin  // R-type -> need to refer to func field
     if(funct_i[3:0]==4'b0000) begin

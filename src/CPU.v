@@ -1,23 +1,24 @@
 module CPU
 (
     clk_i, 
-    rst_i,
-    start_i
+    //rst_i,
+    start_i,
 );
 
 // Ports
 input               clk_i;
-input               rst_i;
+//input               rst_i;
 input               start_i;
-
 // ****************** Stage 1 components ***************
 wire  pc_flush;
 wire  [31:0]  next_pc, pc_4;
 wire  [31:0]  inst_addr, inst;
 
+
+
 PC PC(
     .clk_i      (clk_i),
-    .rst_i      (rst_i),
+  //  .rst_i      (rst_i),
     .flushPC_i  (pc_flush),
     .start_i    (start_i),
     .pc_i       (next_pc),
@@ -31,9 +32,33 @@ Instruction_Memory Instruction_Memory(
 
 wire  [31:0]  sh_addr, branch_addr, sh_32;
 wire  [27:0]  sh_28_o;
-wire  ctrl_branch, equal, mux_branch, jump, beq_flush, lw_stall;
+wire  ctrl_branch, equal, beq_flush, lw_stall, jump;
+wire mux_branch, jump_reg;
 assign mux_branch = equal&ctrl_branch;
+assign jump_reg = jump;
+/*
+always@(*) begin
+  mux_branch <= equal&ctrl_branch;
+  jump_reg <= jump;
+  $display("mux_branch = %d", mux_branch);
+  $display("jump_reg = %d", jump_reg);
+
+
+end
+*/
+//always@(*) begin
+//  jump_reg <= jump;
+//end
+
+// $fdisplay(outfile, "cycle = %d, Start = %d, Stall = %d, Flush = %d\nPC = %d", counter, Start, stall, flush, CPU.PC.pc_o);
+/*
+initial begin
+  mux_branch <= 0;
+  jump_reg <= 0;
+end
+*/
 assign beq_flush = jump|mux_branch;
+
 
 MUX32 MUX_BranchPC(
     .data1_i    (pc_4),
@@ -45,7 +70,7 @@ MUX32 MUX_BranchPC(
 MUX32 MUX_JumpPC(
     .data1_i    (branch_addr),
     .data2_i    (sh_32),
-    .select_i   (jump),
+    .select_i   (jump_reg),
     .data_o     (next_pc)
 );
 
@@ -69,6 +94,7 @@ regr #(.N(64)) IFID(
 wire [5:0]  opcode;
 wire [4:0]  rs;
 wire [4:0]  rt;
+wire [9:0]  rsrt;
 wire [4:0]  rd;
 wire [15:0] imm;
 wire [4:0]  shamt;
@@ -90,14 +116,14 @@ Sign_Extend Sign_Extend(
 );
 
 shiftLeft_26_28 sh_26_28(
-    .data_i     (inst[25:0]),
+    .data_i     (inst_ID[25:0]),
     .data_o     (sh_28_o)
 );
 
 assign sh_32[27:0] = sh_28_o;
 assign sh_32[31:28] = branch_addr[31:28];
 
-Shift32 Shift_32(
+Shift_32 Shift_32(
   .data_i        (sign_ext_id),
   .data_o        (sign_ext_id_sh2)
 );
@@ -105,7 +131,7 @@ Shift32 Shift_32(
 Adder Add_imm(
   .data1_in       (sign_ext_id_sh2),
   .data2_in       (pc_4_ID),
-  .data2_o        (sh_addr)
+  .data_o        (sh_addr)
 );
 
 wire IDEX_flush;
@@ -135,8 +161,8 @@ wire  [1:0]   M_id;
 wire  [1:0]   WB_id;
 
 MUX8 MUX8(
-  .data1_in       (control_id),
-  .data2_in       (8'd0),
+  .data1_i       (control_id),
+  .data2_i       (8'd0),
   .select_i       (IDEX_flush),
   .data_o         ({EX_id,M_id,WB_id})
 );
@@ -254,7 +280,7 @@ dm dm(
 
 wire MemtoReg;
 wire [31:0] dm_data, ALU_data;
-regr #(.N(71)) EXMEM(
+regr #(.N(71)) MEMWB(
     .clk        (clk_i),
 	  .clear      (1'b0),
 	  .hold       (1'b0),

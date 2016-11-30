@@ -20,14 +20,15 @@
 
 module dm(
 		input wire			clk,
-		input wire	[4:0]	addr,
-		input wire			rd, wr,
+		input wire	[31:0]	addr,
+		input wire			rd,
+    input wire      wr,
 		input wire 	[31:0]	wdata,
-		output wire	[31:0]	rdata);
+		output reg	[31:0]	rdata);
 
-	reg [31:0] mem [0:7];  // 32-bit memory with 128 entries
+	reg [31:0] mem [31:0];  // 32-bit memory with 128 entries
 
-	always @(posedge clk) begin
+  always @(negedge clk) begin
 		if (wr) begin
 			mem[addr] <= wdata;
 		end
@@ -37,7 +38,12 @@ module dm(
 	//		rdata = mem[addr];
 	//	end
 	//end
-  assign rdata = mem[addr][31:0];
+  always @(*) begin
+		if (rd) begin
+			rdata <= mem[addr][31:0];
+		end
+	end
+  //assign rdata = mem[addr][31:0];
 	//assign rdata = wr ? wdata : mem[addr][31:0];
 	// During a write, avoid the one cycle delay by reading from 'wdata'
 
