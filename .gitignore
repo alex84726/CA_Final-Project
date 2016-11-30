@@ -1,0 +1,5 @@
+*.vcd
+/*.vcd
+output.txt
+Fibo_output.txt
+
