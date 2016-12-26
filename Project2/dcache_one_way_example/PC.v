@@ -1,7 +1,7 @@
 module PC
 (
 	clk_i,
-    rst_i,
+  rst_i,
 	start_i,
 	stall_i,
 	pcEnable_i,
