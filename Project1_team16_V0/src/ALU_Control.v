@@ -34,6 +34,9 @@ always @(*) begin
     if(funct_i[3:0]==4'b1010) begin
       ALUCtrl_o = 3'b111;
     end
+    if(funct_i[3:0]==4'b1000) begin
+      ALUCtrl_o = 3'b101;
+    end
   end
 end
 endmodule

@@ -26,6 +26,7 @@ always @(*) begin
 		3'b010: data_o = data1_i + data2_i;
 		3'b110: data_o = data1_i - data2_i;
     3'b111: data_o = {{31{1'b0}},slt}; 
+    3'b101: data_o = data1_i * data2_i;
 	endcase
 end
 endmodule
