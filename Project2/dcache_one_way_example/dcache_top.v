@@ -1,4 +1,3 @@
-
 module dcache_top
 (
     // System clock, reset and stall
@@ -49,6 +48,7 @@ input				    p1_MemWrite_i;
 output	[32-1:0]p1_data_o; 
 output				  p1_stall_o; 
 
+integer i;
 //
 // to SRAM interface
 //

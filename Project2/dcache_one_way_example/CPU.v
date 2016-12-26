@@ -41,8 +41,8 @@ PC PC
 	.clk_i(clk_i),
 	.rst_i(rst_i),
 	.start_i(start_i),
-	.stall_i(pc_stall_haz),
-	.pcEnable_i(MemStall),
+	.stall_i(pc_stall_haz|MemStall),
+	.pcEnable_i(1'b1),
 	.pc_i(next_pc),
 	.pc_o(inst_addr)
 );
