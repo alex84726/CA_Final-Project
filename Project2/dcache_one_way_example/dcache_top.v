@@ -121,15 +121,13 @@ assign	cache_dirty  = write_hit;
 //!!! add you code here!  (hit=...?,  r_hit_data=...?)
 
 assign hit = ((sram_tag == p1_tag) && sram_valid ) ? 1'b1 : 1'b0;
-assign r_hit_data = sram_cache_data;
+assign r_hit_data = (hit) ? sram_cache_data : r_hit_data;
 
 // read data :  256-bit to 32-bit
 always@(p1_offset or r_hit_data) begin
 	//!!! add you code here! (p1_data=...?)
-  if(hit) begin
-    for(i=0 ; i<32 ; i=i+1)
-      p1_data[i] = r_hit_data[i+p1_offset[4:2]*32];
-  end
+  for(i=0 ; i<32 ; i=i+1)
+    p1_data[i] = r_hit_data[{p1_offset, 3'b0} + i];
 end
 
 
